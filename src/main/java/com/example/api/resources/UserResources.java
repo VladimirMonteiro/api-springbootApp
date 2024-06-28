@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,6 +44,15 @@ public class UserResources {
         User newUser = userService.create(obj);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(newUser.getId()).toUri();
         return ResponseEntity.created(uri).build();
+    }
+
+    @PutMapping(value = "/{id}")
+    public ResponseEntity<UserDTO> update(@PathVariable Integer id, @RequestBody UserDTO obj){
+
+        obj.setId(id);
+        User newObj = userService.update(obj);
+        return ResponseEntity.ok().body(mapper.map(newObj, UserDTO.class));
+
     }
 
 
