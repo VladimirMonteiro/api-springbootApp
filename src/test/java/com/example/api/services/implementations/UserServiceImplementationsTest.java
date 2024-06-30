@@ -19,8 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 
 @SpringBootTest
 class UserServiceImplementationsTest {
@@ -118,12 +117,38 @@ class UserServiceImplementationsTest {
     }
 
     @Test
-    void update() {
+    void whenUpdateAndReturnAnUser() {
+        Mockito.when(userRepository.save(any())).thenReturn(user);
+
+        User response = service.update(userDTO);
+
+        assertEquals(User.class, response.getClass());
+        assertEquals(ID, response.getId());
     }
 
     @Test
-    void delete() {
+    void deleteWithSuccess() {
+        Mockito.when(userRepository.findById(anyInt())).thenReturn(optionalUser);
+        Mockito.doNothing().when(userRepository).deleteById(ID);
+        service.delete(ID);
+        Mockito.verify(userRepository, Mockito.times(1)).deleteById(ID);
     }
+
+    @Test
+    void deleteUserWithObjectNotFoundException(){
+        Mockito.when(userRepository.findById(anyInt())).thenThrow(new ObjectNotFoundException("Object not found."));
+
+        try{
+
+            service.delete(ID);
+
+        }catch (Exception exception){
+
+            assertEquals(ObjectNotFoundException.class, exception.getClass());
+            assertEquals("Object not found.", exception.getMessage());
+        }
+    }
+
 
     private void startUser(){
         user = new User(ID, NAME, EMAIL, PASSWORD);
