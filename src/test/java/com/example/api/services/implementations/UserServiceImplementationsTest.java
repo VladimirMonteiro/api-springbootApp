@@ -3,7 +3,8 @@ package com.example.api.services.implementations;
 import com.example.api.domain.User;
 import com.example.api.domain.dto.UserDTO;
 import com.example.api.repositories.UserRepository;
-import org.junit.jupiter.api.Assertions;
+import com.example.api.services.exceptions.DataIntragratyViolationException;
+import com.example.api.services.exceptions.ObjectNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -13,9 +14,13 @@ import org.mockito.MockitoAnnotations;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.test.context.SpringBootTest;
 
+
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 
 @SpringBootTest
 class UserServiceImplementationsTest {
@@ -58,11 +63,58 @@ class UserServiceImplementationsTest {
     }
 
     @Test
-    void findAll() {
+    void whenFindByIdReturnAnObjectNotFoundException(){
+        Mockito.when(userRepository.findById(Mockito.anyInt())).thenThrow(new ObjectNotFoundException("Object not found."));
+
+        try {
+
+            service.findById(ID);
+
+        }catch (ObjectNotFoundException exception){
+            assertEquals(ObjectNotFoundException.class, exception.getClass());
+            assertEquals("Object not found.", exception.getMessage());
+
+
+        }
+
     }
 
     @Test
-    void create() {
+    void whenFindAllAndReturnAnListUsers() {
+        Mockito.when(userRepository.findAll()).thenReturn(List.of(user));
+
+        List<User> response = service.findAll();
+
+        assertNotNull(response);
+        assertEquals(List.of(user), response);
+        assertEquals(User.class, response.get(0).getClass());
+
+
+    }
+
+    @Test
+    void whenCreateAnUserAndReturnUser() {
+        Mockito.when(userRepository.save(any())).thenReturn(user);
+
+        User response = service.create(userDTO);
+
+        assertNotNull(response);
+        assertEquals(User.class, response.getClass());
+        assertEquals(user.getName(), response.getName());
+    }
+
+    @Test
+    void whenFindByEmailAndReturnDataIntragratyViolationException(){
+        Mockito.when(userRepository.findByEmail(anyString())).thenReturn(optionalUser);
+        try{
+            optionalUser.get().setId(2);
+            service.create(userDTO);
+        }catch (Exception exception){
+            assertEquals(DataIntragratyViolationException.class, exception.getClass());
+            assertEquals("User already exists.", exception.getMessage());
+        }
+
+
     }
 
     @Test
